@@ -1028,9 +1028,86 @@ def browser_alert(ph, n, beep, speak_level):
 # Streamlit page
 # =====================================================================
 st.set_page_config(page_title="Safe Drive AI", page_icon="🚗", layout="wide")
-st.title("🚗 Safe Drive AI")
-st.caption("Personalised drowsiness / fatigue monitor. Your video is processed live "
-           "and is not stored.")
+
+CSS = """
+<style>
+.stApp {
+    background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(0,212,170,0.18), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(99,102,241,0.20), transparent 55%),
+        linear-gradient(160deg, #0b1220 0%, #0f1a30 55%, #0b1220 100%);
+    background-attachment: fixed;
+}
+header[data-testid="stHeader"] { background: transparent; }
+.block-container { padding-top: 1.5rem; max-width: 1200px; }
+[data-testid="stSidebar"] {
+    background: rgba(15, 23, 42, 0.85);
+    border-right: 1px solid rgba(255,255,255,0.06);
+}
+.hero {
+    padding: 22px 26px; border-radius: 20px; margin-bottom: 18px;
+    background: linear-gradient(120deg, rgba(0,212,170,0.16), rgba(99,102,241,0.18));
+    border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+}
+.hero h1 { margin: 0; font-size: 2.1rem; letter-spacing: 0.3px; color: #F1F5F9; }
+.hero p  { margin: 6px 0 0 0; color: #A9B6CC; font-size: 0.98rem; }
+.hero .tag {
+    display: inline-block; margin-top: 12px; margin-right: 8px; padding: 3px 12px;
+    border-radius: 999px; font-size: 0.78rem; color: #CFFAF0;
+    background: rgba(0,212,170,0.14); border: 1px solid rgba(0,212,170,0.35);
+}
+[data-testid="stMetric"] {
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 16px; padding: 14px 16px;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+    backdrop-filter: blur(6px);
+}
+[data-testid="stMetricLabel"] p { color: #9FB0C9; font-size: 0.85rem; }
+[data-testid="stMetricValue"]   { color: #F8FAFC; font-weight: 700; }
+.status {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; border-radius: 16px; margin: 10px 0 14px 0;
+    font-size: 1.05rem; font-weight: 600; color: #fff;
+    border: 1px solid rgba(255,255,255,0.12);
+}
+.status.ok    { background: linear-gradient(90deg, rgba(16,185,129,0.35), rgba(16,185,129,0.10)); }
+.status.warn  { background: linear-gradient(90deg, rgba(245,158,11,0.40), rgba(245,158,11,0.10)); }
+.status.bad   { background: linear-gradient(90deg, rgba(239,68,68,0.50), rgba(239,68,68,0.12));
+                animation: pulse 1s infinite; }
+.status.info  { background: linear-gradient(90deg, rgba(59,130,246,0.40), rgba(59,130,246,0.10)); }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); }
+                   50%     { box-shadow: 0 0 0 12px rgba(239,68,68,0); } }
+[data-testid="stVideo"], video { border-radius: 18px; }
+div[data-testid="stImage"] img { border-radius: 14px; }
+.stButton > button, .stDownloadButton > button {
+    border-radius: 12px; border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06); color: #E6EDF7; font-weight: 600;
+}
+.stButton > button:hover, .stDownloadButton > button:hover {
+    border-color: #00D4AA; color: #00D4AA;
+}
+footer { visibility: hidden; }
+</style>
+"""
+st.markdown(CSS, unsafe_allow_html=True)
+st.markdown(
+    """
+    <div class="hero">
+      <h1>🚗 Safe Drive AI</h1>
+      <p>Personalised drowsiness &amp; fatigue monitor that learns your face and your daily pattern.</p>
+      <span class="tag">Live on-device processing</span>
+      <span class="tag">Video is never stored</span>
+      <span class="tag">Hindi / English voice alerts</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+def status_card(ph, kind, text):
+    ph.markdown(f'<div class="status {kind}">{text}</div>', unsafe_allow_html=True)
 
 with st.sidebar:
     st.header("Settings")
@@ -1091,17 +1168,17 @@ if ctx.state.playing and proc is not None:
 
         lvl = snap["level"]
         if not snap["face"]:
-            banner.warning("No face detected. Sit in front of the camera with good light.")
+            status_card(banner, "warn", "👀 No face detected. Sit in front of the camera with good light.")
         elif snap["calibrating"]:
-            banner.info(f"Calibrating... look straight, eyes open, mouth closed "
-                        f"({snap['calib_left']:.0f}s left)")
+            status_card(banner, "info", f"🎯 Calibrating... look straight, eyes open, mouth closed "
+                                        f"({snap['calib_left']:.0f}s left)")
         elif lvl == 2:
-            banner.error("🚨 SEVERE: " + (", ".join(snap["alerts"]) or "high fatigue score")
-                         + ". Please stop and rest.")
+            status_card(banner, "bad", "🚨 SEVERE: " + (", ".join(snap["alerts"]) or "high fatigue score")
+                                       + ". Please stop and rest.")
         elif lvl == 1:
-            banner.warning("⚠️ MILD fatigue. Stay alert.")
+            status_card(banner, "warn", "⚠️ MILD fatigue. Stay alert.")
         else:
-            banner.success("✅ Normal")
+            status_card(banner, "ok", "✅ Normal. You are alert.")
 
         m_score.metric("Fatigue score", f"{snap['score']:.0f}/100", LEVEL_NAMES[lvl],
                        delta_color="off")
