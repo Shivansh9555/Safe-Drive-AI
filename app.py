@@ -1031,77 +1031,143 @@ st.set_page_config(page_title="Safe Drive AI", page_icon="🚗", layout="wide")
 
 CSS = """
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+html, body, [class*="css"], .stApp { font-family: 'Poppins', sans-serif; }
+
 .stApp {
-    background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(0,212,170,0.18), transparent 60%),
-        radial-gradient(900px 500px at 100% 0%, rgba(99,102,241,0.20), transparent 55%),
-        linear-gradient(160deg, #0b1220 0%, #0f1a30 55%, #0b1220 100%);
+    background: linear-gradient(135deg, #060b17, #0c1530, #101b3d, #0a2a33, #060b17);
+    background-size: 400% 400%;
+    animation: bgmove 22s ease infinite;
     background-attachment: fixed;
 }
+@keyframes bgmove { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+.stApp::before {
+    content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+        radial-gradient(600px 400px at 8% 12%, rgba(0,212,170,0.16), transparent 70%),
+        radial-gradient(700px 450px at 92% 8%, rgba(139,92,246,0.18), transparent 70%),
+        radial-gradient(600px 400px at 70% 100%, rgba(59,130,246,0.14), transparent 70%);
+}
 header[data-testid="stHeader"] { background: transparent; }
-.block-container { padding-top: 1.5rem; max-width: 1200px; }
+.block-container { padding-top: 1.2rem; max-width: 1250px; position: relative; z-index: 1; }
+footer { visibility: hidden; }
+
 [data-testid="stSidebar"] {
-    background: rgba(15, 23, 42, 0.85);
-    border-right: 1px solid rgba(255,255,255,0.06);
+    background: linear-gradient(180deg, rgba(12,19,40,0.95), rgba(8,14,30,0.95));
+    border-right: 1px solid rgba(255,255,255,0.07);
 }
+.brand { display:flex; align-items:center; gap:10px; margin: 4px 0 10px 0; }
+.brand .logo { width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-size:20px;
+    background: linear-gradient(135deg,#00D4AA,#6366F1); box-shadow: 0 6px 18px rgba(0,212,170,0.35); }
+.brand b { font-size:1.05rem; color:#F1F5F9; } .brand small { display:block; color:#8EA0BE; font-size:0.72rem; }
+
+/* ---------- hero ---------- */
 .hero {
-    padding: 22px 26px; border-radius: 20px; margin-bottom: 18px;
-    background: linear-gradient(120deg, rgba(0,212,170,0.16), rgba(99,102,241,0.18));
-    border: 1px solid rgba(255,255,255,0.10);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.35);
-}
-.hero h1 { margin: 0; font-size: 2.1rem; letter-spacing: 0.3px; color: #F1F5F9; }
-.hero p  { margin: 6px 0 0 0; color: #A9B6CC; font-size: 0.98rem; }
-.hero .tag {
-    display: inline-block; margin-top: 12px; margin-right: 8px; padding: 3px 12px;
-    border-radius: 999px; font-size: 0.78rem; color: #CFFAF0;
-    background: rgba(0,212,170,0.14); border: 1px solid rgba(0,212,170,0.35);
-}
-[data-testid="stMetric"] {
-    background: rgba(255,255,255,0.045);
-    border: 1px solid rgba(255,255,255,0.09);
-    border-radius: 16px; padding: 14px 16px;
-    box-shadow: 0 6px 22px rgba(0,0,0,0.25);
-    backdrop-filter: blur(6px);
-}
-[data-testid="stMetricLabel"] p { color: #9FB0C9; font-size: 0.85rem; }
-[data-testid="stMetricValue"]   { color: #F8FAFC; font-weight: 700; }
-.status {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 18px; border-radius: 16px; margin: 10px 0 14px 0;
-    font-size: 1.05rem; font-weight: 600; color: #fff;
+    position: relative; overflow: hidden; padding: 28px 32px; border-radius: 24px; margin-bottom: 18px;
+    background: linear-gradient(120deg, rgba(0,212,170,0.18), rgba(99,102,241,0.22) 60%, rgba(139,92,246,0.18));
     border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12);
 }
-.status.ok    { background: linear-gradient(90deg, rgba(16,185,129,0.35), rgba(16,185,129,0.10)); }
-.status.warn  { background: linear-gradient(90deg, rgba(245,158,11,0.40), rgba(245,158,11,0.10)); }
-.status.bad   { background: linear-gradient(90deg, rgba(239,68,68,0.50), rgba(239,68,68,0.12));
-                animation: pulse 1s infinite; }
-.status.info  { background: linear-gradient(90deg, rgba(59,130,246,0.40), rgba(59,130,246,0.10)); }
-@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); }
-                   50%     { box-shadow: 0 0 0 12px rgba(239,68,68,0); } }
-[data-testid="stVideo"], video { border-radius: 18px; }
-div[data-testid="stImage"] img { border-radius: 14px; }
+.hero::after { content:"🚗"; position:absolute; right:28px; top:6px; font-size:96px; opacity:0.13; transform: rotate(-8deg); }
+.hero h1 {
+    margin:0; font-size:2.5rem; font-weight:800; letter-spacing:0.2px;
+    background: linear-gradient(90deg,#FFFFFF,#7DF9E0 55%,#A5B4FC); -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color: transparent;
+}
+.hero p { margin:8px 0 0 0; color:#B4C2DA; font-size:1rem; max-width:720px; }
+.chip {
+    display:inline-block; margin:14px 8px 0 0; padding:5px 14px; border-radius:999px; font-size:0.78rem; font-weight:500;
+    color:#D8FFF6; background: rgba(0,212,170,0.13); border:1px solid rgba(0,212,170,0.38);
+}
+
+/* ---------- how it works ---------- */
+.steps { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin-bottom:18px; }
+.step {
+    padding:16px 18px; border-radius:18px; background: rgba(255,255,255,0.045);
+    border:1px solid rgba(255,255,255,0.09); backdrop-filter: blur(8px);
+    transition: transform .2s ease, border-color .2s ease;
+}
+.step:hover { transform: translateY(-3px); border-color: rgba(0,212,170,0.55); }
+.step .n { width:28px; height:28px; border-radius:50%; display:inline-grid; place-items:center; font-weight:700; font-size:0.85rem;
+    color:#04121c; background: linear-gradient(135deg,#00D4AA,#7DF9E0); margin-right:8px; }
+.step b { color:#F1F5F9; } .step p { margin:8px 0 0 0; color:#9FB0C9; font-size:0.86rem; }
+
+/* ---------- status ---------- */
+.status {
+    display:flex; align-items:center; gap:12px; padding:15px 20px; border-radius:18px; margin:12px 0 10px 0;
+    font-size:1.05rem; font-weight:600; color:#fff; border:1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.3);
+}
+.status.ok   { background: linear-gradient(90deg, rgba(16,185,129,0.42), rgba(16,185,129,0.10)); }
+.status.warn { background: linear-gradient(90deg, rgba(245,158,11,0.45), rgba(245,158,11,0.10)); }
+.status.info { background: linear-gradient(90deg, rgba(59,130,246,0.45), rgba(59,130,246,0.10)); }
+.status.bad  { background: linear-gradient(90deg, rgba(239,68,68,0.55), rgba(239,68,68,0.12)); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55);} 50% { box-shadow: 0 0 0 14px rgba(239,68,68,0);} }
+
+/* ---------- gauge ---------- */
+.gauge-card {
+    padding:20px; border-radius:22px; text-align:center; margin-bottom:14px;
+    background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35); backdrop-filter: blur(10px);
+}
+.gauge-title { color:#8EA0BE; font-size:0.78rem; letter-spacing:2px; font-weight:600; margin-bottom:12px; }
+.ring { width:190px; height:190px; margin:0 auto; border-radius:50%; display:grid; place-items:center;
+    box-shadow: 0 0 40px var(--glow); transition: background .4s ease; }
+.ring-inner { width:150px; height:150px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background: radial-gradient(circle at 30% 25%, #14203f, #0a1226); border:1px solid rgba(255,255,255,0.08); }
+.ring-num { font-size:3rem; font-weight:800; color:#F8FAFC; line-height:1; }
+.ring-sub { font-size:0.85rem; font-weight:700; letter-spacing:2px; margin-top:6px; }
+
+/* ---------- stat cards ---------- */
+.stats { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+.stat {
+    padding:13px 15px; border-radius:16px; background: rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.09); backdrop-filter: blur(8px);
+    transition: transform .2s ease, border-color .2s ease;
+}
+.stat:hover { transform: translateY(-2px); border-color: rgba(125,249,224,0.5); }
+.stat .ic { font-size:1.25rem; } .stat .lb { color:#8EA0BE; font-size:0.74rem; margin-top:2px; }
+.stat .vl { color:#F8FAFC; font-size:1.45rem; font-weight:700; line-height:1.2; }
+
+/* ---------- streamlit widgets ---------- */
+[data-testid="stMetric"] {
+    background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
+    border-radius:16px; padding:14px 16px; box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+}
+[data-testid="stMetricLabel"] p { color:#9FB0C9; }
+[data-testid="stMetricValue"] { color:#F8FAFC; font-weight:700; }
+video, [data-testid="stVideo"] { border-radius:20px; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
+div[data-testid="stImage"] img { border-radius:16px; }
 .stButton > button, .stDownloadButton > button {
-    border-radius: 12px; border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.06); color: #E6EDF7; font-weight: 600;
+    border-radius:12px; border:1px solid rgba(255,255,255,0.15); font-weight:600; color:#E6EDF7;
+    background: linear-gradient(135deg, rgba(0,212,170,0.18), rgba(99,102,241,0.18));
+    transition: all .2s ease;
 }
 .stButton > button:hover, .stDownloadButton > button:hover {
-    border-color: #00D4AA; color: #00D4AA;
+    border-color:#00D4AA; color:#7DF9E0; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,212,170,0.25);
 }
-footer { visibility: hidden; }
+@media (max-width: 800px) { .steps { grid-template-columns: 1fr; } .hero h1 { font-size:1.8rem; } }
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(
-    """
-    <div class="hero">
-      <h1>🚗 Safe Drive AI</h1>
-      <p>Personalised drowsiness &amp; fatigue monitor that learns your face and your daily pattern.</p>
-      <span class="tag">Live on-device processing</span>
-      <span class="tag">Video is never stored</span>
-      <span class="tag">Hindi / English voice alerts</span>
-    </div>
-    """,
+    '<div class="hero">'
+    '<h1>Safe Drive AI</h1>'
+    '<p>A personal drowsiness and fatigue monitor that learns your face, your blink pattern '
+    'and your daily energy dips, then warns you before you doze off.</p>'
+    '<span class="chip">⚡ Live processing</span>'
+    '<span class="chip">🔒 Video is never stored</span>'
+    '<span class="chip">🔊 Hindi / English voice alerts</span>'
+    '<span class="chip">🧠 Personalised to you</span>'
+    '</div>'
+    '<div class="steps">'
+    '<div class="step"><span class="n">1</span><b>Start the camera</b>'
+    '<p>Enter your name in the sidebar, press START and allow camera access.</p></div>'
+    '<div class="step"><span class="n">2</span><b>Calibrate</b>'
+    '<p>Look straight for 5 seconds so the app learns your normal eyes and mouth.</p></div>'
+    '<div class="step"><span class="n">3</span><b>Stay alert</b>'
+    '<p>Get beep and voice warnings on tired eyes, yawns and head nods.</p></div>'
+    '</div>',
     unsafe_allow_html=True,
 )
 
@@ -1109,8 +1175,46 @@ st.markdown(
 def status_card(ph, kind, text):
     ph.markdown(f'<div class="status {kind}">{text}</div>', unsafe_allow_html=True)
 
+
+GAUGE_COLORS = ["#10b981", "#f59e0b", "#ef4444"]
+
+
+def render_dashboard(gauge_ph, stats_ph, snap):
+    """Circular fatigue gauge + icon stat cards (pure HTML/CSS)."""
+    lvl = int(snap["level"])
+    score = max(0.0, min(100.0, float(snap["score"])))
+    c = GAUGE_COLORS[lvl]
+    gauge_ph.markdown(
+        '<div class="gauge-card">'
+        '<div class="gauge-title">FATIGUE LEVEL</div>'
+        f'<div class="ring" style="--glow:{c}55; background: conic-gradient(from 0deg, {c} {score * 3.6:.0f}deg, '
+        'rgba(255,255,255,0.08) 0deg);">'
+        '<div class="ring-inner">'
+        f'<div class="ring-num">{score:.0f}</div>'
+        f'<div class="ring-sub" style="color:{c}">{LEVEL_NAMES[lvl]}</div>'
+        '</div></div></div>',
+        unsafe_allow_html=True)
+    cards = [
+        ("👁️", "PERCLOS (60 s)", f"{snap['perclos'] * 100:.0f}%"),
+        ("💫", "Blinks / min", f"{snap['blinks']:.0f}"),
+        ("🥱", "Yawns", f"{snap['yawns']}"),
+        ("🙇", "Head nods (2 min)", f"{snap['nods']}"),
+        ("🔍", "Eye ratio (EAR)", f"{snap['ear']:.2f}"),
+        ("👄", "Mouth ratio (MAR)", f"{snap['mar']:.2f}"),
+        ("⬇️", "Looking down", "Yes" if snap["looking_down"] else "No"),
+        ("🌤️", "2-3 PM dip mode", "On" if snap["dip"] else "Off"),
+    ]
+    html = '<div class="stats">' + "".join(
+        f'<div class="stat"><div class="ic">{ic}</div><div class="vl">{vl}</div><div class="lb">{lb}</div></div>'
+        for ic, lb, vl in cards) + '</div>'
+    stats_ph.markdown(html, unsafe_allow_html=True)
+
+
+IDLE_SNAP = dict(level=0, score=0.0, perclos=0.0, blinks=0.0, yawns=0, nods=0, ear=0.0,
+                 mar=0.0, looking_down=False, dip=False)
+
 with st.sidebar:
-    st.header("Settings")
+    st.markdown('<div class="brand"><div class="logo">🚗</div><div><b>Safe Drive AI</b><small>Control panel</small></div></div>', unsafe_allow_html=True)
     user = st.text_input("Your name", value="guest").strip() or "guest"
     use_hands = st.toggle("Hand-over-mouth yawn detection", value=True,
                           help="Turn off if the app feels slow.")
@@ -1124,26 +1228,27 @@ with st.sidebar:
     st.caption("Press START below the video, allow the camera, then look straight "
                "for 5 seconds while it calibrates.")
 
-ctx = webrtc_streamer(
-    key=f"drive-{user}-{use_hands}",
-    mode=WebRtcMode.SENDRECV,
-    rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
-    media_stream_constraints={
-        "video": {"width": {"ideal": 640}, "height": {"ideal": 480},
-                  "frameRate": {"ideal": 15}},
-        "audio": False,
-    },
-    video_processor_factory=lambda: DrowsyProcessor(user, use_hands, tz_name),
-    async_processing=True,
-)
-
-banner = st.empty()
-cols = st.columns(4)
-m_score, m_perclos, m_blink, m_yawn = (c.empty() for c in cols)
-cols2 = st.columns(4)
-m_nod, m_ear, m_mar, m_state = (c.empty() for c in cols2)
-note = st.empty()
+left, right = st.columns([3, 2], gap="large")
+with left:
+    ctx = webrtc_streamer(
+        key=f"drive-{user}-{use_hands}",
+        mode=WebRtcMode.SENDRECV,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+        media_stream_constraints={
+            "video": {"width": {"ideal": 640}, "height": {"ideal": 480},
+                      "frameRate": {"ideal": 15}},
+            "audio": False,
+        },
+        video_processor_factory=lambda: DrowsyProcessor(user, use_hands, tz_name),
+        async_processing=True,
+    )
+    banner = st.empty()
+    note = st.empty()
+with right:
+    gauge_ph = st.empty()
+    stats_ph = st.empty()
 alert_ph = st.empty()
+render_dashboard(gauge_ph, stats_ph, IDLE_SNAP)
 
 proc = ctx.video_processor
 if ctx.state.playing and proc is not None:
@@ -1180,15 +1285,7 @@ if ctx.state.playing and proc is not None:
         else:
             status_card(banner, "ok", "✅ Normal. You are alert.")
 
-        m_score.metric("Fatigue score", f"{snap['score']:.0f}/100", LEVEL_NAMES[lvl],
-                       delta_color="off")
-        m_perclos.metric("PERCLOS (60 s)", f"{snap['perclos'] * 100:.0f}%")
-        m_blink.metric("Blinks/min", f"{snap['blinks']:.0f}")
-        m_yawn.metric("Yawns", snap["yawns"])
-        m_nod.metric("Nods (2 min)", snap["nods"])
-        m_ear.metric("EAR", f"{snap['ear']:.2f}")
-        m_mar.metric("MAR", f"{snap['mar']:.2f}")
-        m_state.metric("Looking down", "Yes" if snap["looking_down"] else "No")
+        render_dashboard(gauge_ph, stats_ph, snap)
 
         # sound + voice in the browser (with the same cooldowns as the desktop script)
         t = time.time()
