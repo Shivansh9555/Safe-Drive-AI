@@ -71,8 +71,9 @@ VOICE_MSG = {
     2: ("आप बहुत थक गए हैं। कृपया रुककर आराम करें।", "You are very tired. Please stop and take a rest."),
     3: ("दोपहर दो से तीन बजे नींद सबसे ज़्यादा आती है, कृपया सतर्क रहें।",
         "Between 2 and 3 PM sleepiness is highest. Please stay alert."),
+    4: ("आपका सिर झुक रहा है, सतर्क रहें।", "Your head is nodding. Stay alert."),
 }
-VOICE_COOLDOWN = {1: 30, 2: 10, 3: 1800}
+VOICE_COOLDOWN = {1: 30, 2: 10, 3: 1800, 4: 10}
 
 
 def get_tz(name):
@@ -572,7 +573,7 @@ class DrowsyProcessor(VideoProcessorBase):
         self.msg_text, self.msg_until = "", 0.0
 
         # values shown on the page
-        self.v = dict(level=0, score=0.0, perclos=0.0, blinks=0.0, yawns=0, nods=0,
+        self.v = dict(level=0, score=0.0, perclos=0.0, blinks=0.0, yawns=0, nods=0, nod_total=0,
                       ear=0.0, mar=0.0, face=False, looking_down=False, dip=False,
                       calibrating=self.calibrating, calib_left=CALIB_SECONDS,
                       alerts=[], model_prob=0.0)
@@ -903,7 +904,7 @@ class DrowsyProcessor(VideoProcessorBase):
                     acc[0] += raw_score
                     acc[1] += 1
 
-                self.v.update(level=level, score=score, perclos=self.tracker.perclos,
+                self.v.update(level=level, score=score, perclos=self.tracker.perclos, nod_total=self.session_nods,
                               blinks=self.tracker.blink_rate, yawns=self.session_yawns,
                               nods=len(self.nod_times), dip=dip, alerts=alerts,
                               model_prob=self.model_prob)
@@ -986,7 +987,7 @@ class DrowsyProcessor(VideoProcessorBase):
 # =====================================================================
 # Browser alerts (beep + speech), played in the user's browser
 # =====================================================================
-def browser_alert(ph, n, beep, speak_level):
+def browser_alert(ph, n, beep, speak_level, nod=False):
     hi, en = ("", "")
     if speak_level:
         hi, en = VOICE_MSG[speak_level]
@@ -995,6 +996,7 @@ def browser_alert(ph, n, beep, speak_level):
     // alert #{n}
     (function() {{
       const beep = {json.dumps(bool(beep))};
+      const nod = {json.dumps(bool(nod))};
       const hi = {json.dumps(hi)};
       const en = {json.dumps(en)};
       try {{
@@ -1004,6 +1006,20 @@ def browser_alert(ph, n, beep, speak_level):
           o.type = "square"; o.frequency.value = 2500; g.gain.value = 0.15;
           o.connect(g); g.connect(ac.destination);
           o.start(); o.stop(ac.currentTime + 0.3);
+        }}
+      }} catch (e) {{}}
+      try {{
+        if (nod) {{
+          const ac2 = new (window.AudioContext || window.webkitAudioContext)();
+          [[880, 0.0], [620, 0.22]].forEach(([f, t0]) => {{
+            const o = ac2.createOscillator(), g = ac2.createGain();
+            o.type = "sine"; o.frequency.value = f;
+            g.gain.setValueAtTime(0.0001, ac2.currentTime + t0);
+            g.gain.exponentialRampToValueAtTime(0.35, ac2.currentTime + t0 + 0.03);
+            g.gain.exponentialRampToValueAtTime(0.0001, ac2.currentTime + t0 + 0.30);
+            o.connect(g); g.connect(ac2.destination);
+            o.start(ac2.currentTime + t0); o.stop(ac2.currentTime + t0 + 0.32);
+          }});
         }}
       }} catch (e) {{}}
       try {{
@@ -1333,6 +1349,8 @@ with st.sidebar:
     use_hands = st.toggle("Hand-over-mouth yawn detection", value=True,
                           help="Turn off if the app feels slow.")
     sound_on = st.toggle("Beep alert", value=True)
+    nod_sound_on = st.toggle("Head nod sound", value=True,
+                             help="Plays a soft two-tone sound each time a head nod is detected.")
     voice_on = st.toggle("Voice alert (Hindi / English)", value=True)
     tz_name = st.text_input("Timezone (for the 2-3 PM dip)", value=DEFAULT_TZ)
     st.divider()
@@ -1374,6 +1392,11 @@ if ctx.state.playing and proc is not None:
         proc.request_false_alarm()
 
     last = st.session_state.setdefault("last_alert", {"beep": 0.0, 1: 0.0, 2: 0.0, 3: 0.0})
+    for _k in ("nod", 4):
+        last.setdefault(_k, 0.0)
+    if st.session_state.get("seen_proc") != id(proc):      # a new camera session started
+        st.session_state["seen_proc"] = id(proc)
+        st.session_state["seen_nods"] = 0
     n_alert = st.session_state.get("n_alert", 0)
 
     while True:
@@ -1417,10 +1440,18 @@ if ctx.state.playing and proc is not None:
             elif snap["dip"]:
                 if voice_on and t - last[3] >= VOICE_COOLDOWN[3]:
                     speak, last[3] = 3, t
-            if beep or speak:
+            # head nod: soft two-tone sound every time a new nod is counted
+            nod_now = False
+            if snap["nod_total"] > st.session_state.get("seen_nods", 0):
+                st.session_state["seen_nods"] = snap["nod_total"]
+                if nod_sound_on and t - last["nod"] >= 1.0:
+                    nod_now, last["nod"] = True, t
+                    if voice_on and not speak and t - last[4] >= VOICE_COOLDOWN[4]:
+                        speak, last[4] = 4, t
+            if beep or speak or nod_now:
                 n_alert += 1
                 st.session_state["n_alert"] = n_alert
-                browser_alert(alert_ph, n_alert, beep, speak)
+                browser_alert(alert_ph, n_alert, beep, speak, nod_now)
         time.sleep(0.5)
 
 elif not ctx.state.playing and st.session_state.get("proc") is not None:
