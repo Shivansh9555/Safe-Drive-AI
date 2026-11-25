@@ -1146,10 +1146,121 @@ div[data-testid="stImage"] img { border-radius:16px; }
 .stButton > button:hover, .stDownloadButton > button:hover {
     border-color:#00D4AA; color:#7DF9E0; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,212,170,0.25);
 }
-@media (max-width: 800px) { .steps { grid-template-columns: 1fr; } .hero h1 { font-size:1.8rem; } }
+/* ---------- landing page ---------- */
+.land-hero { text-align:center; padding: 46px 20px 26px 20px; position:relative; }
+.orb {
+    width:130px; height:130px; margin:0 auto 18px auto; border-radius:50%; display:grid; place-items:center;
+    background: radial-gradient(circle at 30% 25%, rgba(125,249,224,0.55), rgba(99,102,241,0.35) 60%, rgba(10,18,38,0.2));
+    border:1px solid rgba(255,255,255,0.18); font-size:58px;
+    box-shadow: 0 0 60px rgba(0,212,170,0.45), inset 0 0 30px rgba(255,255,255,0.12);
+    animation: float 4s ease-in-out infinite, glow 3s ease-in-out infinite;
+}
+@keyframes float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-10px);} }
+@keyframes glow  { 0%,100% { box-shadow: 0 0 40px rgba(0,212,170,0.35), inset 0 0 30px rgba(255,255,255,0.10);}
+                   50%     { box-shadow: 0 0 80px rgba(99,102,241,0.55), inset 0 0 30px rgba(255,255,255,0.18);} }
+.land-badge {
+    display:inline-block; padding:5px 16px; border-radius:999px; font-size:0.74rem; font-weight:600; letter-spacing:3px;
+    color:#CFFAF0; background:rgba(0,212,170,0.12); border:1px solid rgba(0,212,170,0.4);
+}
+.land-hero h1 {
+    margin:18px 0 8px 0; font-size:4rem; line-height:1.08; font-weight:800;
+    background: linear-gradient(90deg,#FFFFFF,#7DF9E0 50%,#A5B4FC); -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color: transparent;
+}
+.land-hero p { color:#B4C2DA; font-size:1.1rem; max-width:680px; margin:0 auto; }
+.land-stats { display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin:22px 0 8px 0; }
+.land-stat {
+    min-width:150px; padding:14px 22px; border-radius:18px; text-align:center;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10); backdrop-filter: blur(8px);
+}
+.land-stat b { display:block; font-size:1.7rem; color:#F8FAFC; } .land-stat span { color:#8EA0BE; font-size:0.8rem; }
+.land-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; margin:26px 0 30px 0; }
+.land-card {
+    padding:22px; border-radius:20px; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.09);
+    backdrop-filter: blur(8px); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.land-card:hover { transform: translateY(-5px); border-color: rgba(0,212,170,0.6); box-shadow: 0 16px 40px rgba(0,212,170,0.15); }
+.land-card .ic { font-size:1.9rem; } .land-card b { display:block; margin:10px 0 6px 0; color:#F1F5F9; font-size:1.02rem; }
+.land-card p { margin:0; color:#9FB0C9; font-size:0.86rem; line-height:1.5; }
+.land-foot { text-align:center; color:#7F90AD; font-size:0.82rem; margin:16px 0 30px 0; }
+[data-testid="stForm"] {
+    border:1px solid rgba(255,255,255,0.12); border-radius:22px; padding:22px;
+    background:rgba(255,255,255,0.05); backdrop-filter: blur(10px); box-shadow: 0 14px 44px rgba(0,0,0,0.4);
+}
+button[kind="primary"], button[kind="primaryFormSubmit"],
+[data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primaryFormSubmit"] {
+    background: linear-gradient(90deg,#00D4AA,#6366F1) !important; color:#04121c !important; font-weight:700 !important;
+    font-size:1.05rem !important; padding:0.7rem 1rem !important; border:none !important; border-radius:14px !important;
+    box-shadow: 0 10px 30px rgba(0,212,170,0.35);
+}
+button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover,
+[data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseButton-primaryFormSubmit"]:hover {
+    transform: translateY(-2px) scale(1.01); box-shadow: 0 14px 36px rgba(99,102,241,0.5); color:#04121c !important;
+}
+@media (max-width: 800px) { .steps, .land-grid { grid-template-columns: 1fr; } .hero h1 { font-size:1.8rem; } .land-hero h1 { font-size:2.6rem; } }
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
+
+
+# =====================================================================
+# Landing (enter) page
+# =====================================================================
+st.session_state.setdefault("page", "landing")
+st.session_state.setdefault("user_name", "guest")
+
+
+def render_landing():
+    st.markdown(
+        '<style>[data-testid="stSidebar"], [data-testid="stSidebarCollapsedControl"], '
+        '[data-testid="collapsedControl"] {display:none !important;}</style>',
+        unsafe_allow_html=True)
+    st.markdown(
+        '<div class="land-hero">'
+        '<div class="orb">👁️</div>'
+        '<span class="land-badge">AI DRIVER SAFETY</span>'
+        '<h1>Stay awake.<br>Stay alive.</h1>'
+        '<p>Safe Drive AI watches for tired eyes, yawns and head nods through your camera, '
+        'learns what is normal for you, and warns you before drowsiness becomes dangerous.</p>'
+        '</div>'
+        '<div class="land-stats">'
+        '<div class="land-stat"><b>5 sec</b><span>one-time calibration</span></div>'
+        '<div class="land-stat"><b>6</b><span>fatigue signals combined</span></div>'
+        '<div class="land-stat"><b>0</b><span>videos stored</span></div>'
+        '</div>'
+        '<div class="land-grid">'
+        '<div class="land-card"><div class="ic">👁️</div><b>Eye closure tracking</b>'
+        '<p>PERCLOS, blink length and micro-sleeps, with looking down told apart from a real blink.</p></div>'
+        '<div class="land-card"><div class="ic">🥱</div><b>Yawn detection</b>'
+        '<p>Catches open-mouth yawns and yawns hidden behind your hand, and warns on frequent yawning.</p></div>'
+        '<div class="land-card"><div class="ic">🙇</div><b>Head nod alerts</b>'
+        '<p>Notices when your head drops and stays down while your eyes are narrowing.</p></div>'
+        '<div class="land-card"><div class="ic">🧠</div><b>Personalised to you</b>'
+        '<p>Learns your normal eyes and mouth, and becomes less sensitive when you mark a false alarm.</p></div>'
+        '<div class="land-card"><div class="ic">🌤️</div><b>Knows your energy dips</b>'
+        '<p>Extra sensitivity in the 2 to 3 PM post-lunch dip, plus a report of your tiring hours.</p></div>'
+        '<div class="land-card"><div class="ic">🔊</div><b>Voice and beep alerts</b>'
+        '<p>Spoken warnings in Hindi or English and a loud beep when fatigue turns severe.</p></div>'
+        '</div>',
+        unsafe_allow_html=True)
+
+    _, mid, _ = st.columns([1, 1.4, 1])
+    with mid:
+        with st.form("enter_form", clear_on_submit=False):
+            name = st.text_input("Your name", placeholder="e.g. Shivansh", key="landing_name")
+            go = st.form_submit_button("Enter Safe Drive AI  →", type="primary",
+                                       use_container_width=True)
+        if go:
+            st.session_state["user_name"] = (name or "").strip() or "guest"
+            st.session_state["page"] = "app"
+            st.rerun()
+    st.markdown('<div class="land-foot">Runs in your browser · Allow camera access when asked · '
+                'Works best in good lighting</div>', unsafe_allow_html=True)
+
+
+if st.session_state["page"] == "landing":
+    render_landing()
+    st.stop()
 st.markdown(
     '<div class="hero">'
     '<h1>Safe Drive AI</h1>'
@@ -1215,7 +1326,10 @@ IDLE_SNAP = dict(level=0, score=0.0, perclos=0.0, blinks=0.0, yawns=0, nods=0, e
 
 with st.sidebar:
     st.markdown('<div class="brand"><div class="logo">🚗</div><div><b>Safe Drive AI</b><small>Control panel</small></div></div>', unsafe_allow_html=True)
-    user = st.text_input("Your name", value="guest").strip() or "guest"
+    if st.button("🏠 Home page", use_container_width=True):
+        st.session_state["page"] = "landing"
+        st.rerun()
+    user = st.text_input("Your name", key="user_name").strip() or "guest"
     use_hands = st.toggle("Hand-over-mouth yawn detection", value=True,
                           help="Turn off if the app feels slow.")
     sound_on = st.toggle("Beep alert", value=True)
