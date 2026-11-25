@@ -504,9 +504,12 @@ def make_report(user, timeline, events, settings, hourly):
 # Live processor: runs once per webcam frame (in a background thread)
 # =====================================================================
 class DrowsyProcessor(VideoProcessorBase):
-    def __init__(self, user="guest", use_hands=True, tz_name=DEFAULT_TZ):
+    def __init__(self, user="guest", use_hands=True, tz_name=DEFAULT_TZ, auto_off_sec=60):
         self.user = user
         self.use_hands = use_hands
+        self.auto_off_sec = auto_off_sec     # 0 = never turn off automatically
+        self.no_face_since = None
+        self.auto_stopped = False
         self.tz = get_tz(tz_name)
         self.lock = threading.Lock()
 
@@ -576,7 +579,7 @@ class DrowsyProcessor(VideoProcessorBase):
         self.v = dict(level=0, score=0.0, perclos=0.0, blinks=0.0, yawns=0, nods=0, nod_total=0,
                       ear=0.0, mar=0.0, face=False, looking_down=False, dip=False,
                       calibrating=self.calibrating, calib_left=CALIB_SECONDS,
-                      alerts=[], model_prob=0.0)
+                      alerts=[], model_prob=0.0, no_face_for=0.0, auto_stop=False)
 
     # ---------- controls (called from the page) ----------
     def request_recalibrate(self):
@@ -689,9 +692,21 @@ class DrowsyProcessor(VideoProcessorBase):
         score = self.tracker.score
 
         if pts is None:
-            self.v.update(face=False, calibrating=self.calibrating)
+            if self.no_face_since is None:
+                self.no_face_since = now
+            gone = now - self.no_face_since
+            self.v.update(face=False, calibrating=self.calibrating, no_face_for=gone)
             self._put(frame, "No face detected", (10, 30), 0.7, (0, 165, 255))
+            if self.auto_off_sec and gone >= self.auto_off_sec:
+                self.auto_stopped = True
+                self.v["auto_stop"] = True
+            elif self.auto_off_sec:
+                left = max(0, int(self.auto_off_sec - gone))
+                self._put(frame, f"Turning off in {left}s if nobody is seen", (10, 60),
+                          0.6, (0, 165, 255))
         else:
+            self.no_face_since = None
+            self.v.update(no_face_for=0.0, auto_stop=False)
             left_eye, right_eye, mouth = pts[42:48], pts[36:42], pts[48:68]
             ear, mar = ear_mar(pts)
             head_idx = head_down_index(pts)
@@ -980,7 +995,8 @@ class DrowsyProcessor(VideoProcessorBase):
             user=self.user, avg=avg_f, max=max_f, yawns=self.session_yawns,
             nods=self.session_nods, alerts=self.session_alerts,
             false_alarms=self.session_false, peak=peak, report=report,
-            sessions=self.profiles.get(self.user, {}).get("sessions", 0))
+            sessions=self.profiles.get(self.user, {}).get("sessions", 0),
+            auto_off=self.auto_stopped, auto_off_sec=self.auto_off_sec)
         return self.result
 
 
@@ -1353,6 +1369,11 @@ with st.sidebar:
                              help="Plays a soft two-tone sound each time a head nod is detected.")
     voice_on = st.toggle("Voice alert (Hindi / English)", value=True)
     tz_name = st.text_input("Timezone (for the 2-3 PM dip)", value=DEFAULT_TZ)
+    auto_off_on = st.toggle("Auto turn-off when nobody is seen", value=True,
+                            help="Stops the camera if no face is visible for the time below.")
+    auto_off_val = st.number_input("Turn off after (seconds)", min_value=15, max_value=600,
+                                   value=60, step=5, disabled=not auto_off_on)
+    auto_off_sec = int(auto_off_val) if auto_off_on else 0
     st.divider()
     recal_btn = st.button("🔄 Recalibrate", use_container_width=True)
     false_btn = st.button("❌ False alarm", use_container_width=True,
@@ -1360,6 +1381,7 @@ with st.sidebar:
     st.caption("Press START below the video, allow the camera, then look straight "
                "for 5 seconds while it calibrates.")
 
+want_state = False if st.session_state.pop("force_stop", False) else None
 left, right = st.columns([3, 2], gap="large")
 with left:
     ctx = webrtc_streamer(
@@ -1371,8 +1393,9 @@ with left:
                       "frameRate": {"ideal": 15}},
             "audio": False,
         },
-        video_processor_factory=lambda: DrowsyProcessor(user, use_hands, tz_name),
+        video_processor_factory=lambda: DrowsyProcessor(user, use_hands, tz_name, auto_off_sec),
         async_processing=True,
+        desired_playing_state=want_state,
     )
     banner = st.empty()
     note = st.empty()
@@ -1397,10 +1420,17 @@ if ctx.state.playing and proc is not None:
     if st.session_state.get("seen_proc") != id(proc):      # a new camera session started
         st.session_state["seen_proc"] = id(proc)
         st.session_state["seen_nods"] = 0
+        st.session_state["stop_sent"] = False
     n_alert = st.session_state.get("n_alert", 0)
 
     while True:
+        proc.auto_off_sec = auto_off_sec          # picks up sidebar changes while running
         snap = proc.snapshot()
+        if snap["auto_stop"] and not st.session_state.get("stop_sent"):
+            # nobody was seen long enough: ask the camera component to stop, then rerun
+            st.session_state["stop_sent"] = True
+            st.session_state["force_stop"] = True
+            st.rerun()
         if snap["error"]:
             note.error(snap["error"])
         elif snap["welcome"]:
@@ -1410,7 +1440,12 @@ if ctx.state.playing and proc is not None:
 
         lvl = snap["level"]
         if not snap["face"]:
-            status_card(banner, "warn", "👀 No face detected. Sit in front of the camera with good light.")
+            if auto_off_sec:
+                left_s = max(0, int(auto_off_sec - snap["no_face_for"]))
+                status_card(banner, "warn", f"👀 No face detected. Camera turns off in {left_s}s "
+                                            "if nobody is seen.")
+            else:
+                status_card(banner, "warn", "👀 No face detected. Sit in front of the camera with good light.")
         elif snap["calibrating"]:
             status_card(banner, "info", f"🎯 Calibrating... look straight, eyes open, mouth closed "
                                         f"({snap['calib_left']:.0f}s left)")
@@ -1461,6 +1496,9 @@ elif not ctx.state.playing and st.session_state.get("proc") is not None:
 
 res = st.session_state.get("result")
 if res and not ctx.state.playing:
+    if res.get("auto_off"):
+        st.warning(f"The camera was turned off automatically because no face was seen for "
+                   f"{res.get('auto_off_sec', 60)} seconds. Press START to begin again.")
     st.subheader(f"Session summary for {res['user']}")
     a, b, c, d = st.columns(4)
     a.metric("Avg fatigue", f"{res['avg']:.0f}")
