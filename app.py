@@ -1057,133 +1057,191 @@ def browser_alert(ph, n, beep, speak_level, nod=False):
 
 
 # =====================================================================
-# Streamlit page
+# Streamlit page  (redesigned UI / UX)
 # =====================================================================
-st.set_page_config(page_title="Safe Drive AI", page_icon="🚗", layout="wide")
+st.set_page_config(page_title="Safe Drive AI", page_icon="🚗", layout="wide",
+                   initial_sidebar_state="expanded")
 
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-html, body, [class*="css"], .stApp { font-family: 'Poppins', sans-serif; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
 
+:root {
+    --bg: #070c18;
+    --card: rgba(255,255,255,0.045);
+    --card-hi: rgba(255,255,255,0.075);
+    --line: rgba(255,255,255,0.10);
+    --text: #F1F5F9;
+    --muted: #94A3B8;
+    --soft: #B4C2DA;
+    --accent: #00D4AA;
+    --accent-2: #6366F1;
+    --ok: #10b981;
+    --warn: #f59e0b;
+    --bad: #ef4444;
+    --radius: 20px;
+}
+
+html, body, [class*="css"], .stApp { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+h1, h2, h3, .hero h1, .land-hero h1, .brand b { font-family: 'Poppins', 'Inter', sans-serif; }
+
+/* ---------- background ---------- */
 .stApp {
     background: linear-gradient(135deg, #060b17, #0c1530, #101b3d, #0a2a33, #060b17);
     background-size: 400% 400%;
-    animation: bgmove 22s ease infinite;
+    animation: bgmove 26s ease infinite;
     background-attachment: fixed;
 }
-@keyframes bgmove { 0% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} 100% {background-position: 0% 50%;} }
+@keyframes bgmove { 0%,100% {background-position: 0% 50%;} 50% {background-position: 100% 50%;} }
 .stApp::before {
     content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
     background:
-        radial-gradient(600px 400px at 8% 12%, rgba(0,212,170,0.16), transparent 70%),
-        radial-gradient(700px 450px at 92% 8%, rgba(139,92,246,0.18), transparent 70%),
-        radial-gradient(600px 400px at 70% 100%, rgba(59,130,246,0.14), transparent 70%);
+        radial-gradient(600px 400px at 8% 12%, rgba(0,212,170,0.15), transparent 70%),
+        radial-gradient(700px 450px at 92% 8%, rgba(139,92,246,0.17), transparent 70%),
+        radial-gradient(600px 400px at 70% 100%, rgba(59,130,246,0.13), transparent 70%);
 }
 header[data-testid="stHeader"] { background: transparent; }
-.block-container { padding-top: 1.2rem; max-width: 1250px; position: relative; z-index: 1; }
-footer { visibility: hidden; }
+[data-testid="stToolbar"], #MainMenu, footer { visibility: hidden; }
+.block-container { padding-top: 1.1rem; padding-bottom: 3rem; max-width: 1240px; position: relative; z-index: 1; }
+::selection { background: rgba(0,212,170,0.35); }
 
+/* ---------- accessibility ---------- */
+:focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ---------- sidebar ---------- */
 [data-testid="stSidebar"] {
-    background: linear-gradient(180deg, rgba(12,19,40,0.95), rgba(8,14,30,0.95));
-    border-right: 1px solid rgba(255,255,255,0.07);
+    background: linear-gradient(180deg, rgba(12,19,40,0.97), rgba(8,14,30,0.97));
+    border-right: 1px solid var(--line);
 }
-.brand { display:flex; align-items:center; gap:10px; margin: 4px 0 10px 0; }
-.brand .logo { width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-size:20px;
+[data-testid="stSidebar"] [data-testid="stExpander"] {
+    border: 1px solid var(--line); border-radius: 14px; background: var(--card);
+}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary { font-weight: 600; }
+.side-label { color: var(--muted); font-size: 0.7rem; letter-spacing: 1.6px; font-weight: 700; margin: 14px 0 6px 2px; }
+.brand { display:flex; align-items:center; gap:10px; margin: 4px 0 12px 0; }
+.brand .logo { width:40px; height:40px; border-radius:13px; display:grid; place-items:center; font-size:20px;
     background: linear-gradient(135deg,#00D4AA,#6366F1); box-shadow: 0 6px 18px rgba(0,212,170,0.35); }
-.brand b { font-size:1.05rem; color:#F1F5F9; } .brand small { display:block; color:#8EA0BE; font-size:0.72rem; }
+.brand b { font-size:1.05rem; color:var(--text); } .brand small { display:block; color:var(--muted); font-size:0.72rem; }
 
-/* ---------- hero ---------- */
-.hero {
-    position: relative; overflow: hidden; padding: 28px 32px; border-radius: 24px; margin-bottom: 18px;
-    background: linear-gradient(120deg, rgba(0,212,170,0.18), rgba(99,102,241,0.22) 60%, rgba(139,92,246,0.18));
-    border: 1px solid rgba(255,255,255,0.12);
-    box-shadow: 0 18px 60px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12);
+/* ---------- top bar (app page) ---------- */
+.topbar {
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    padding: 16px 22px; border-radius: 22px; margin-bottom: 14px;
+    background: linear-gradient(120deg, rgba(0,212,170,0.14), rgba(99,102,241,0.18) 60%, rgba(139,92,246,0.14));
+    border: 1px solid var(--line); box-shadow: 0 14px 44px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.10);
 }
-.hero::after { content:"🚗"; position:absolute; right:28px; top:6px; font-size:96px; opacity:0.13; transform: rotate(-8deg); }
-.hero h1 {
-    margin:0; font-size:2.5rem; font-weight:800; letter-spacing:0.2px;
+.topbar h1 {
+    margin:0; font-size:1.7rem; font-weight:800; line-height:1.15;
     background: linear-gradient(90deg,#FFFFFF,#7DF9E0 55%,#A5B4FC); -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color: transparent;
 }
-.hero p { margin:8px 0 0 0; color:#B4C2DA; font-size:1rem; max-width:720px; }
-.chip {
-    display:inline-block; margin:14px 8px 0 0; padding:5px 14px; border-radius:999px; font-size:0.78rem; font-weight:500;
-    color:#D8FFF6; background: rgba(0,212,170,0.13); border:1px solid rgba(0,212,170,0.38);
+.topbar p { margin:4px 0 0 0; color:var(--soft); font-size:0.9rem; }
+.user-pill {
+    display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border-radius:999px; font-size:0.85rem; font-weight:600;
+    color:#D8FFF6; background: rgba(0,212,170,0.12); border:1px solid rgba(0,212,170,0.35);
 }
+.user-pill .dot { width:8px; height:8px; border-radius:50%; background: var(--accent); box-shadow:0 0 10px var(--accent); }
 
-/* ---------- how it works ---------- */
-.steps { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin-bottom:18px; }
+/* ---------- guide steps ---------- */
+.steps { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin: 4px 0 16px 0; }
 .step {
-    padding:16px 18px; border-radius:18px; background: rgba(255,255,255,0.045);
-    border:1px solid rgba(255,255,255,0.09); backdrop-filter: blur(8px);
-    transition: transform .2s ease, border-color .2s ease;
+    padding:16px 18px; border-radius:18px; background: var(--card); border:1px solid var(--line);
+    backdrop-filter: blur(8px); transition: transform .2s ease, border-color .2s ease;
 }
 .step:hover { transform: translateY(-3px); border-color: rgba(0,212,170,0.55); }
 .step .n { width:28px; height:28px; border-radius:50%; display:inline-grid; place-items:center; font-weight:700; font-size:0.85rem;
     color:#04121c; background: linear-gradient(135deg,#00D4AA,#7DF9E0); margin-right:8px; }
-.step b { color:#F1F5F9; } .step p { margin:8px 0 0 0; color:#9FB0C9; font-size:0.86rem; }
+.step b { color:var(--text); } .step p { margin:8px 0 0 0; color:var(--muted); font-size:0.86rem; line-height:1.5; }
 
-/* ---------- status ---------- */
+/* ---------- status banner ---------- */
 .status {
-    display:flex; align-items:center; gap:12px; padding:15px 20px; border-radius:18px; margin:12px 0 10px 0;
-    font-size:1.05rem; font-weight:600; color:#fff; border:1px solid rgba(255,255,255,0.14);
+    display:flex; align-items:center; gap:12px; padding:14px 20px; border-radius:18px; margin:12px 0 10px 0;
+    font-size:1rem; font-weight:600; color:#fff; border:1px solid rgba(255,255,255,0.14);
     box-shadow: 0 8px 28px rgba(0,0,0,0.3);
 }
-.status.ok   { background: linear-gradient(90deg, rgba(16,185,129,0.42), rgba(16,185,129,0.10)); }
-.status.warn { background: linear-gradient(90deg, rgba(245,158,11,0.45), rgba(245,158,11,0.10)); }
-.status.info { background: linear-gradient(90deg, rgba(59,130,246,0.45), rgba(59,130,246,0.10)); }
-.status.bad  { background: linear-gradient(90deg, rgba(239,68,68,0.55), rgba(239,68,68,0.12)); animation: pulse 1s infinite; }
+.status.ok   { background: linear-gradient(90deg, rgba(16,185,129,0.42), rgba(16,185,129,0.08)); }
+.status.warn { background: linear-gradient(90deg, rgba(245,158,11,0.45), rgba(245,158,11,0.08)); }
+.status.info { background: linear-gradient(90deg, rgba(59,130,246,0.45), rgba(59,130,246,0.08)); }
+.status.bad  { background: linear-gradient(90deg, rgba(239,68,68,0.55), rgba(239,68,68,0.10)); animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55);} 50% { box-shadow: 0 0 0 14px rgba(239,68,68,0);} }
+
+.advice {
+    padding:14px 18px; border-radius:16px; margin: 0 0 10px 0; color:#FEE2E2;
+    background: rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.45); font-size:0.92rem; line-height:1.6;
+}
+.advice b { color:#fff; }
 
 /* ---------- gauge ---------- */
 .gauge-card {
-    padding:20px; border-radius:22px; text-align:center; margin-bottom:14px;
-    background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10);
+    padding:18px 20px 16px 20px; border-radius:22px; text-align:center; margin-bottom:12px;
+    background: var(--card); border:1px solid var(--line);
     box-shadow: 0 12px 40px rgba(0,0,0,0.35); backdrop-filter: blur(10px);
 }
-.gauge-title { color:#8EA0BE; font-size:0.78rem; letter-spacing:2px; font-weight:600; margin-bottom:12px; }
-.ring { width:190px; height:190px; margin:0 auto; border-radius:50%; display:grid; place-items:center;
+.gauge-title { color:var(--muted); font-size:0.74rem; letter-spacing:2px; font-weight:700; margin-bottom:12px; }
+.ring { width:180px; height:180px; margin:0 auto; border-radius:50%; display:grid; place-items:center;
     box-shadow: 0 0 40px var(--glow); transition: background .4s ease; }
-.ring-inner { width:150px; height:150px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+.ring-inner { width:142px; height:142px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;
     background: radial-gradient(circle at 30% 25%, #14203f, #0a1226); border:1px solid rgba(255,255,255,0.08); }
-.ring-num { font-size:3rem; font-weight:800; color:#F8FAFC; line-height:1; }
-.ring-sub { font-size:0.85rem; font-weight:700; letter-spacing:2px; margin-top:6px; }
+.ring-num { font-size:2.9rem; font-weight:800; color:#F8FAFC; line-height:1; font-family:'Poppins',sans-serif; }
+.ring-sub { font-size:0.8rem; font-weight:700; letter-spacing:2px; margin-top:6px; }
+.spark { margin-top:12px; }
+.spark small { display:flex; justify-content:space-between; color:var(--muted); font-size:0.68rem; margin-top:2px; }
 
 /* ---------- stat cards ---------- */
-.stats { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+.stats { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
 .stat {
-    padding:13px 15px; border-radius:16px; background: rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.09); backdrop-filter: blur(8px);
-    transition: transform .2s ease, border-color .2s ease;
+    padding:12px 14px; border-radius:16px; background: var(--card); border:1px solid var(--line);
+    backdrop-filter: blur(8px); transition: transform .2s ease, border-color .2s ease; border-left:3px solid transparent;
 }
 .stat:hover { transform: translateY(-2px); border-color: rgba(125,249,224,0.5); }
-.stat .ic { font-size:1.25rem; } .stat .lb { color:#8EA0BE; font-size:0.74rem; margin-top:2px; }
-.stat .vl { color:#F8FAFC; font-size:1.45rem; font-weight:700; line-height:1.2; }
+.stat.t-ok   { border-left-color: var(--ok); }
+.stat.t-warn { border-left-color: var(--warn); background: rgba(245,158,11,0.08); }
+.stat.t-bad  { border-left-color: var(--bad);  background: rgba(239,68,68,0.10); }
+.stat .ic { font-size:1.15rem; } .stat .lb { color:var(--muted); font-size:0.72rem; margin-top:2px; }
+.stat .vl { color:#F8FAFC; font-size:1.35rem; font-weight:700; line-height:1.2; }
 
 /* ---------- streamlit widgets ---------- */
 [data-testid="stMetric"] {
-    background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
+    background: var(--card); border:1px solid var(--line);
     border-radius:16px; padding:14px 16px; box-shadow: 0 6px 22px rgba(0,0,0,0.25);
 }
-[data-testid="stMetricLabel"] p { color:#9FB0C9; }
+[data-testid="stMetricLabel"] p { color:var(--soft); }
 [data-testid="stMetricValue"] { color:#F8FAFC; font-weight:700; }
 video, [data-testid="stVideo"] { border-radius:20px; box-shadow: 0 14px 40px rgba(0,0,0,0.45); }
 div[data-testid="stImage"] img { border-radius:16px; }
 .stButton > button, .stDownloadButton > button {
     border-radius:12px; border:1px solid rgba(255,255,255,0.15); font-weight:600; color:#E6EDF7;
-    background: linear-gradient(135deg, rgba(0,212,170,0.18), rgba(99,102,241,0.18));
-    transition: all .2s ease;
+    background: linear-gradient(135deg, rgba(0,212,170,0.16), rgba(99,102,241,0.16)); transition: all .2s ease;
 }
 .stButton > button:hover, .stDownloadButton > button:hover {
     border-color:#00D4AA; color:#7DF9E0; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,212,170,0.25);
 }
+[data-testid="stTabs"] button[role="tab"] { font-weight:600; }
+[data-testid="stExpander"] { border-radius:14px; }
+
+/* ---------- session summary ---------- */
+.sum-head {
+    display:flex; align-items:center; gap:16px; padding:18px 22px; border-radius:20px; margin: 8px 0 14px 0;
+    background: var(--card); border:1px solid var(--line);
+}
+.sum-head .big { font-size:2.2rem; }
+.sum-head h3 { margin:0; font-size:1.25rem; color:var(--text); }
+.sum-head p { margin:3px 0 0 0; color:var(--muted); font-size:0.88rem; }
+.sum-head.good { border-color: rgba(16,185,129,0.5); background: linear-gradient(90deg, rgba(16,185,129,0.16), var(--card)); }
+.sum-head.mid  { border-color: rgba(245,158,11,0.5); background: linear-gradient(90deg, rgba(245,158,11,0.16), var(--card)); }
+.sum-head.high { border-color: rgba(239,68,68,0.5);  background: linear-gradient(90deg, rgba(239,68,68,0.18), var(--card)); }
+
 /* ---------- landing page ---------- */
-.land-hero { text-align:center; padding: 46px 20px 26px 20px; position:relative; }
+.nav { display:flex; align-items:center; justify-content:space-between; padding: 4px 4px 0 4px; }
+.nav .tag { color:var(--muted); font-size:0.82rem; }
+.land-hero { text-align:center; padding: 36px 20px 18px 20px; position:relative; }
 .orb {
-    width:130px; height:130px; margin:0 auto 18px auto; border-radius:50%; display:grid; place-items:center;
+    width:120px; height:120px; margin:0 auto 18px auto; border-radius:50%; display:grid; place-items:center;
     background: radial-gradient(circle at 30% 25%, rgba(125,249,224,0.55), rgba(99,102,241,0.35) 60%, rgba(10,18,38,0.2));
-    border:1px solid rgba(255,255,255,0.18); font-size:58px;
+    border:1px solid rgba(255,255,255,0.18); font-size:54px;
     box-shadow: 0 0 60px rgba(0,212,170,0.45), inset 0 0 30px rgba(255,255,255,0.12);
     animation: float 4s ease-in-out infinite, glow 3s ease-in-out infinite;
 }
@@ -1191,33 +1249,44 @@ div[data-testid="stImage"] img { border-radius:16px; }
 @keyframes glow  { 0%,100% { box-shadow: 0 0 40px rgba(0,212,170,0.35), inset 0 0 30px rgba(255,255,255,0.10);}
                    50%     { box-shadow: 0 0 80px rgba(99,102,241,0.55), inset 0 0 30px rgba(255,255,255,0.18);} }
 .land-badge {
-    display:inline-block; padding:5px 16px; border-radius:999px; font-size:0.74rem; font-weight:600; letter-spacing:3px;
+    display:inline-block; padding:5px 16px; border-radius:999px; font-size:0.72rem; font-weight:700; letter-spacing:3px;
     color:#CFFAF0; background:rgba(0,212,170,0.12); border:1px solid rgba(0,212,170,0.4);
 }
 .land-hero h1 {
-    margin:18px 0 8px 0; font-size:4rem; line-height:1.08; font-weight:800;
+    margin:18px 0 10px 0; font-size:clamp(2.4rem, 6vw, 4.1rem); line-height:1.08; font-weight:800;
     background: linear-gradient(90deg,#FFFFFF,#7DF9E0 50%,#A5B4FC); -webkit-background-clip:text; background-clip:text;
     -webkit-text-fill-color: transparent;
 }
-.land-hero p { color:#B4C2DA; font-size:1.1rem; max-width:680px; margin:0 auto; }
-.land-stats { display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin:22px 0 8px 0; }
+.land-hero p { color:var(--soft); font-size:1.08rem; max-width:680px; margin:0 auto; line-height:1.6; }
+.land-stats { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:22px 0 6px 0; }
 .land-stat {
     min-width:150px; padding:14px 22px; border-radius:18px; text-align:center;
-    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.10); backdrop-filter: blur(8px);
+    background:var(--card); border:1px solid var(--line); backdrop-filter: blur(8px);
 }
-.land-stat b { display:block; font-size:1.7rem; color:#F8FAFC; } .land-stat span { color:#8EA0BE; font-size:0.8rem; }
-.land-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; margin:26px 0 30px 0; }
+.land-stat b { display:block; font-size:1.6rem; color:#F8FAFC; font-family:'Poppins',sans-serif; }
+.land-stat span { color:var(--muted); font-size:0.8rem; }
+.sec-title { text-align:center; margin: 30px 0 4px 0; font-size:1.5rem; font-weight:700; color:var(--text); font-family:'Poppins',sans-serif; }
+.sec-sub { text-align:center; color:var(--muted); font-size:0.92rem; margin: 0 0 16px 0; }
+.land-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; margin: 12px 0 26px 0; }
 .land-card {
-    padding:22px; border-radius:20px; background:rgba(255,255,255,0.045); border:1px solid rgba(255,255,255,0.09);
+    padding:22px; border-radius:20px; background:var(--card); border:1px solid var(--line);
     backdrop-filter: blur(8px); transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 .land-card:hover { transform: translateY(-5px); border-color: rgba(0,212,170,0.6); box-shadow: 0 16px 40px rgba(0,212,170,0.15); }
-.land-card .ic { font-size:1.9rem; } .land-card b { display:block; margin:10px 0 6px 0; color:#F1F5F9; font-size:1.02rem; }
-.land-card p { margin:0; color:#9FB0C9; font-size:0.86rem; line-height:1.5; }
-.land-foot { text-align:center; color:#7F90AD; font-size:0.82rem; margin:16px 0 30px 0; }
+.land-card .ic { font-size:1.9rem; } .land-card b { display:block; margin:10px 0 6px 0; color:var(--text); font-size:1.02rem; }
+.land-card p { margin:0; color:var(--muted); font-size:0.87rem; line-height:1.55; }
+.privacy {
+    display:flex; align-items:center; gap:16px; padding:18px 22px; border-radius:20px; margin: 4px 0 24px 0;
+    background: linear-gradient(90deg, rgba(0,212,170,0.12), rgba(99,102,241,0.10)); border:1px solid rgba(0,212,170,0.3);
+}
+.privacy .ic { font-size:2rem; } .privacy b { color:var(--text); }
+.privacy p { margin:3px 0 0 0; color:var(--soft); font-size:0.88rem; line-height:1.5; }
+.cta-title { text-align:center; font-size:1.3rem; font-weight:700; color:var(--text); margin: 6px 0 12px 0; font-family:'Poppins',sans-serif; }
+.land-foot { text-align:center; color:#7F90AD; font-size:0.82rem; margin:14px 0 6px 0; }
+.disclaimer { text-align:center; color:#64748B; font-size:0.76rem; margin: 0 0 30px 0; }
 [data-testid="stForm"] {
-    border:1px solid rgba(255,255,255,0.12); border-radius:22px; padding:22px;
-    background:rgba(255,255,255,0.05); backdrop-filter: blur(10px); box-shadow: 0 14px 44px rgba(0,0,0,0.4);
+    border:1px solid var(--line); border-radius:22px; padding:22px;
+    background:var(--card); backdrop-filter: blur(10px); box-shadow: 0 14px 44px rgba(0,0,0,0.4);
 }
 button[kind="primary"], button[kind="primaryFormSubmit"],
 [data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primaryFormSubmit"] {
@@ -1229,7 +1298,13 @@ button[kind="primary"]:hover, button[kind="primaryFormSubmit"]:hover,
 [data-testid="stBaseButton-primary"]:hover, [data-testid="stBaseButton-primaryFormSubmit"]:hover {
     transform: translateY(-2px) scale(1.01); box-shadow: 0 14px 36px rgba(99,102,241,0.5); color:#04121c !important;
 }
-@media (max-width: 800px) { .steps, .land-grid { grid-template-columns: 1fr; } .hero h1 { font-size:1.8rem; } .land-hero h1 { font-size:2.6rem; } }
+
+@media (max-width: 800px) {
+    .steps, .land-grid { grid-template-columns: 1fr; }
+    .topbar h1 { font-size:1.35rem; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .ring { width:150px; height:150px; } .ring-inner { width:118px; height:118px; } .ring-num { font-size:2.3rem; }
+}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -1248,6 +1323,9 @@ def render_landing():
         '[data-testid="collapsedControl"] {display:none !important;}</style>',
         unsafe_allow_html=True)
     st.markdown(
+        '<div class="nav"><div class="brand"><div class="logo">🚗</div><div><b>Safe Drive AI</b>'
+        '<small>Driver fatigue monitor</small></div></div>'
+        '<div class="tag">Free · No sign-up · Runs in your browser</div></div>'
         '<div class="land-hero">'
         '<div class="orb">👁️</div>'
         '<span class="land-badge">AI DRIVER SAFETY</span>'
@@ -1259,7 +1337,41 @@ def render_landing():
         '<div class="land-stat"><b>5 sec</b><span>one-time calibration</span></div>'
         '<div class="land-stat"><b>6</b><span>fatigue signals combined</span></div>'
         '<div class="land-stat"><b>0</b><span>videos stored</span></div>'
+        '</div>',
+        unsafe_allow_html=True)
+
+    # ----- call to action first, so nobody has to scroll to get started -----
+    _, mid, _ = st.columns([1, 1.4, 1])
+    with mid:
+        with st.form("enter_form", clear_on_submit=False):
+            prefill = st.session_state.get("user_name", "")
+            name = st.text_input(
+                "What should we call you?",
+                value="" if prefill == "guest" else prefill,
+                placeholder="e.g. Shivansh  (leave blank to continue as guest)",
+                key="landing_name",
+                help="Your name keeps your calibration and fatigue history separate from other drivers.")
+            go = st.form_submit_button("Start monitoring  →", type="primary", use_container_width=True)
+        if go:
+            st.session_state["user_name"] = (name or "").strip() or "guest"
+            st.session_state["page"] = "app"
+            st.rerun()
+    st.markdown('<div class="land-foot">📷 You will be asked for camera access · 💡 Works best in good lighting</div>',
+                unsafe_allow_html=True)
+
+    st.markdown(
+        '<div class="sec-title">How it works</div>'
+        '<div class="sec-sub">Three steps, about ten seconds</div>'
+        '<div class="steps">'
+        '<div class="step"><span class="n">1</span><b>Start the camera</b>'
+        '<p>Press START and allow camera access. Put the camera at face height.</p></div>'
+        '<div class="step"><span class="n">2</span><b>Calibrate</b>'
+        '<p>Look straight for 5 seconds so the app learns your normal eyes and mouth.</p></div>'
+        '<div class="step"><span class="n">3</span><b>Stay alert</b>'
+        '<p>Get beep and voice warnings on tired eyes, yawns and head nods.</p></div>'
         '</div>'
+        '<div class="sec-title">What it watches</div>'
+        '<div class="sec-sub">Six signals, combined into one fatigue score</div>'
         '<div class="land-grid">'
         '<div class="land-card"><div class="ic">👁️</div><b>Eye closure tracking</b>'
         '<p>PERCLOS, blink length and micro-sleeps, with looking down told apart from a real blink.</p></div>'
@@ -1273,115 +1385,162 @@ def render_landing():
         '<p>Extra sensitivity in the 2 to 3 PM post-lunch dip, plus a report of your tiring hours.</p></div>'
         '<div class="land-card"><div class="ic">🔊</div><b>Voice and beep alerts</b>'
         '<p>Spoken warnings in Hindi or English and a loud beep when fatigue turns severe.</p></div>'
-        '</div>',
+        '</div>'
+        '<div class="privacy"><div class="ic">🔒</div><div><b>Your video stays private</b>'
+        '<p>Frames are analysed live and are never recorded or saved. Only numbers such as your '
+        'fatigue score and calibration are kept, so the app can personalise itself to you.</p></div></div>',
         unsafe_allow_html=True)
 
-    _, mid, _ = st.columns([1, 1.4, 1])
-    with mid:
-        with st.form("enter_form", clear_on_submit=False):
-            name = st.text_input("Your name", placeholder="e.g. Shivansh", key="landing_name")
-            go = st.form_submit_button("Enter Safe Drive AI  →", type="primary",
-                                       use_container_width=True)
-        if go:
-            st.session_state["user_name"] = (name or "").strip() or "guest"
-            st.session_state["page"] = "app"
-            st.rerun()
-    st.markdown('<div class="land-foot">Runs in your browser · Allow camera access when asked · '
-                'Works best in good lighting</div>', unsafe_allow_html=True)
+    with st.expander("Frequently asked questions"):
+        st.markdown(
+            "**Does it work at night or with glasses?** It works best with even light on your face. "
+            "Glasses are fine; strong glare on the lenses can hide your eyes.\n\n"
+            "**Why does it ask me to calibrate?** Everyone's eyes and mouth look different. "
+            "Five seconds of looking straight lets the app set thresholds for you.\n\n"
+            "**The alarm rang but I was fine.** Press **False alarm** in the sidebar and it will "
+            "become a little less sensitive for you.\n\n"
+            "**Can I use it on my phone?** Yes, in a modern browser. Mount the phone safely and "
+            "never handle it while driving.")
+    st.markdown('<div class="disclaimer">Safe Drive AI is an assistive tool and not a substitute for rest. '
+                'If you feel sleepy, pull over safely and take a break.</div>', unsafe_allow_html=True)
 
 
 if st.session_state["page"] == "landing":
     render_landing()
     st.stop()
-st.markdown(
-    '<div class="hero">'
-    '<h1>Safe Drive AI</h1>'
-    '<p>A personal drowsiness and fatigue monitor that learns your face, your blink pattern '
-    'and your daily energy dips, then warns you before you doze off.</p>'
-    '<span class="chip">⚡ Live processing</span>'
-    '<span class="chip">🔒 Video is never stored</span>'
-    '<span class="chip">🔊 Hindi / English voice alerts</span>'
-    '<span class="chip">🧠 Personalised to you</span>'
-    '</div>'
-    '<div class="steps">'
-    '<div class="step"><span class="n">1</span><b>Start the camera</b>'
-    '<p>Enter your name in the sidebar, press START and allow camera access.</p></div>'
-    '<div class="step"><span class="n">2</span><b>Calibrate</b>'
-    '<p>Look straight for 5 seconds so the app learns your normal eyes and mouth.</p></div>'
-    '<div class="step"><span class="n">3</span><b>Stay alert</b>'
-    '<p>Get beep and voice warnings on tired eyes, yawns and head nods.</p></div>'
-    '</div>',
-    unsafe_allow_html=True,
-)
 
 
+# =====================================================================
+# App page helpers
+# =====================================================================
 def status_card(ph, kind, text):
     ph.markdown(f'<div class="status {kind}">{text}</div>', unsafe_allow_html=True)
 
 
 GAUGE_COLORS = ["#10b981", "#f59e0b", "#ef4444"]
+HIST_MAX = 120   # about one minute of history at the 0.5 s refresh
 
 
-def render_dashboard(gauge_ph, stats_ph, snap):
-    """Circular fatigue gauge + icon stat cards (pure HTML/CSS)."""
+def sparkline(hist, color):
+    """Tiny inline SVG of the recent fatigue score."""
+    w, h = 240, 52
+    if len(hist) < 2:
+        return ('<div class="spark"><svg viewBox="0 0 240 52" width="100%" height="52" role="img" '
+                'aria-label="Recent fatigue trend (waiting for data)">'
+                '<line x1="0" y1="50" x2="240" y2="50" stroke="rgba(255,255,255,0.12)" stroke-width="1"/></svg>'
+                '<small><span>Recent trend</span><span>waiting for data</span></small></div>')
+    n = len(hist)
+    pts = [(i * w / (n - 1), h - 2 - (max(0.0, min(100.0, v)) / 100.0) * (h - 6)) for i, v in enumerate(hist)]
+    line = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+    area = f"0,{h} " + line + f" {w},{h}"
+    return ('<div class="spark"><svg viewBox="0 0 240 52" width="100%" height="52" role="img" '
+            'aria-label="Recent fatigue trend">'
+            f'<polygon points="{area}" fill="{color}" opacity="0.18"/>'
+            f'<polyline points="{line}" fill="none" stroke="{color}" stroke-width="2" '
+            'stroke-linejoin="round" stroke-linecap="round"/></svg>'
+            '<small><span>~1 min ago</span><span>now</span></small></div>')
+
+
+def tone(value, warn, bad):
+    return "t-bad" if value >= bad else ("t-warn" if value >= warn else "t-ok")
+
+
+def render_dashboard(gauge_ph, stats_ph, snap, hist=()):
+    """Circular fatigue gauge + trend line + colour-coded stat cards (pure HTML/CSS)."""
     lvl = int(snap["level"])
     score = max(0.0, min(100.0, float(snap["score"])))
     c = GAUGE_COLORS[lvl]
     gauge_ph.markdown(
         '<div class="gauge-card">'
         '<div class="gauge-title">FATIGUE LEVEL</div>'
-        f'<div class="ring" style="--glow:{c}55; background: conic-gradient(from 0deg, {c} {score * 3.6:.0f}deg, '
+        f'<div class="ring" role="img" aria-label="Fatigue score {score:.0f} out of 100, {LEVEL_NAMES[lvl]}" '
+        f'style="--glow:{c}55; background: conic-gradient(from 0deg, {c} {score * 3.6:.0f}deg, '
         'rgba(255,255,255,0.08) 0deg);">'
         '<div class="ring-inner">'
         f'<div class="ring-num">{score:.0f}</div>'
         f'<div class="ring-sub" style="color:{c}">{LEVEL_NAMES[lvl]}</div>'
-        '</div></div></div>',
+        '</div></div>'
+        + sparkline(list(hist), c) +
+        '</div>',
         unsafe_allow_html=True)
     cards = [
-        ("👁️", "PERCLOS (60 s)", f"{snap['perclos'] * 100:.0f}%"),
-        ("💫", "Blinks / min", f"{snap['blinks']:.0f}"),
-        ("🥱", "Yawns", f"{snap['yawns']}"),
-        ("🙇", "Head nods (2 min)", f"{snap['nods']}"),
-        ("🔍", "Eye ratio (EAR)", f"{snap['ear']:.2f}"),
-        ("👄", "Mouth ratio (MAR)", f"{snap['mar']:.2f}"),
-        ("⬇️", "Looking down", "Yes" if snap["looking_down"] else "No"),
-        ("🌤️", "2-3 PM dip mode", "On" if snap["dip"] else "Off"),
+        ("👁️", "PERCLOS (60 s)", f"{snap['perclos'] * 100:.0f}%", tone(snap["perclos"], 0.15, 0.30)),
+        ("💫", "Blinks / min", f"{snap['blinks']:.0f}", ""),
+        ("🥱", "Yawns", f"{snap['yawns']}", tone(snap["yawns"], 2, 3)),
+        ("🙇", "Head nods (2 min)", f"{snap['nods']}", tone(snap["nods"], 1, 3)),
+        ("🔍", "Eye ratio (EAR)", f"{snap['ear']:.2f}", ""),
+        ("👄", "Mouth ratio (MAR)", f"{snap['mar']:.2f}", ""),
+        ("⬇️", "Looking down", "Yes" if snap["looking_down"] else "No", "t-warn" if snap["looking_down"] else ""),
+        ("🌤️", "2-3 PM dip mode", "On" if snap["dip"] else "Off", ""),
     ]
     html = '<div class="stats">' + "".join(
-        f'<div class="stat"><div class="ic">{ic}</div><div class="vl">{vl}</div><div class="lb">{lb}</div></div>'
-        for ic, lb, vl in cards) + '</div>'
+        f'<div class="stat {tn}"><div class="ic">{ic}</div><div class="vl">{vl}</div><div class="lb">{lb}</div></div>'
+        for ic, lb, vl, tn in cards) + '</div>'
     stats_ph.markdown(html, unsafe_allow_html=True)
 
 
 IDLE_SNAP = dict(level=0, score=0.0, perclos=0.0, blinks=0.0, yawns=0, nods=0, ear=0.0,
                  mar=0.0, looking_down=False, dip=False)
 
+SEVERE_ADVICE = ('<div class="advice"><b>What to do now:</b> slow down and pull over at the next safe place. '
+                 'Splash cold water on your face, walk around, and take a 15–20 minute nap before you drive again. '
+                 'Coffee only helps for a short time.</div>')
+
+
+# =====================================================================
+# Sidebar
+# =====================================================================
 with st.sidebar:
-    st.markdown('<div class="brand"><div class="logo">🚗</div><div><b>Safe Drive AI</b><small>Control panel</small></div></div>', unsafe_allow_html=True)
+    st.markdown('<div class="brand"><div class="logo">🚗</div><div><b>Safe Drive AI</b>'
+                '<small>Control panel</small></div></div>', unsafe_allow_html=True)
     if st.button("🏠 Home page", use_container_width=True):
         st.session_state["page"] = "landing"
         st.rerun()
-    user = st.text_input("Your name", key="user_name").strip() or "guest"
-    use_hands = st.toggle("Hand-over-mouth yawn detection", value=True,
-                          help="Turn off if the app feels slow.")
-    sound_on = st.toggle("Beep alert", value=True)
-    nod_sound_on = st.toggle("Head nod sound", value=True,
-                             help="Plays a soft two-tone sound each time a head nod is detected.")
-    voice_on = st.toggle("Voice alert (Hindi / English)", value=True)
-    tz_name = st.text_input("Timezone (for the 2-3 PM dip)", value=DEFAULT_TZ)
-    auto_off_on = st.toggle("Auto turn-off when nobody is seen", value=True,
-                            help="Stops the camera if no face is visible for the time below.")
-    auto_off_val = st.number_input("Turn off after (seconds)", min_value=15, max_value=600,
-                                   value=60, step=5, disabled=not auto_off_on)
+
+    st.markdown('<div class="side-label">DRIVER</div>', unsafe_allow_html=True)
+    user = st.text_input("Your name", key="user_name",
+                         help="Keeps your calibration and history separate.").strip() or "guest"
+
+    st.markdown('<div class="side-label">ALERTS</div>', unsafe_allow_html=True)
+    with st.expander("🔊 Sound & voice", expanded=True):
+        sound_on = st.toggle("Beep alert", value=True, help="Loud beep when fatigue is severe.")
+        nod_sound_on = st.toggle("Head nod sound", value=True,
+                                 help="Plays a soft two-tone sound each time a head nod is detected.")
+        voice_on = st.toggle("Voice alert (Hindi / English)", value=True)
+
+    st.markdown('<div class="side-label">DETECTION</div>', unsafe_allow_html=True)
+    with st.expander("⚙️ Settings", expanded=False):
+        use_hands = st.toggle("Hand-over-mouth yawn detection", value=True,
+                              help="Turn off if the app feels slow.")
+        tz_name = st.text_input("Timezone (for the 2-3 PM dip)", value=DEFAULT_TZ,
+                                help="Example: Asia/Kolkata, Europe/London, America/New_York")
+        auto_off_on = st.toggle("Auto turn-off when nobody is seen", value=True,
+                                help="Stops the camera if no face is visible for the time below.")
+        auto_off_val = st.number_input("Turn off after (seconds)", min_value=15, max_value=600,
+                                       value=60, step=5, disabled=not auto_off_on)
     auto_off_sec = int(auto_off_val) if auto_off_on else 0
-    st.divider()
-    recal_btn = st.button("🔄 Recalibrate", use_container_width=True)
+
+    st.markdown('<div class="side-label">ACTIONS</div>', unsafe_allow_html=True)
+    recal_btn = st.button("🔄 Recalibrate", use_container_width=True,
+                          help="Look straight for 5 seconds to re-learn your normal face.")
     false_btn = st.button("❌ False alarm", use_container_width=True,
                           help="The alarm rang but you were fine: become less sensitive.")
-    st.caption("Press START below the video, allow the camera, then look straight "
+    st.caption("💡 Tip: press **START** under the video, allow the camera, then look straight "
                "for 5 seconds while it calibrates.")
 
+
+# =====================================================================
+# Main area
+# =====================================================================
 want_state = False if st.session_state.pop("force_stop", False) else None
+
+st.markdown(
+    '<div class="topbar"><div><h1>Safe Drive AI</h1>'
+    '<p>Live drowsiness monitor · video is never stored</p></div>'
+    f'<div class="user-pill"><span class="dot"></span>Driver: {user}</div></div>',
+    unsafe_allow_html=True)
+
+guide_ph = st.empty()
 left, right = st.columns([3, 2], gap="large")
 with left:
     ctx = webrtc_streamer(
@@ -1398,12 +1557,31 @@ with left:
         desired_playing_state=want_state,
     )
     banner = st.empty()
+    advice_ph = st.empty()
     note = st.empty()
 with right:
     gauge_ph = st.empty()
     stats_ph = st.empty()
 alert_ph = st.empty()
-render_dashboard(gauge_ph, stats_ph, IDLE_SNAP)
+
+# Show the 3-step guide only while the camera is off (keeps the live view uncluttered).
+if not ctx.state.playing:
+    guide_ph.markdown(
+        '<div class="steps">'
+        '<div class="step"><span class="n">1</span><b>Start the camera</b>'
+        '<p>Press <b>START</b> under the video and allow camera access.</p></div>'
+        '<div class="step"><span class="n">2</span><b>Calibrate</b>'
+        '<p>Look straight for 5 seconds so the app learns your normal eyes and mouth.</p></div>'
+        '<div class="step"><span class="n">3</span><b>Stay alert</b>'
+        '<p>Get beep and voice warnings on tired eyes, yawns and head nods.</p></div>'
+        '</div>', unsafe_allow_html=True)
+    if st.session_state.get("result") is None:
+        status_card(banner, "info", "👋 Ready when you are. Press START to begin monitoring.")
+else:
+    guide_ph.empty()
+
+hist_now = st.session_state.get("hist", [])
+render_dashboard(gauge_ph, stats_ph, IDLE_SNAP, hist_now if not ctx.state.playing else [])
 
 proc = ctx.video_processor
 if ctx.state.playing and proc is not None:
@@ -1411,8 +1589,10 @@ if ctx.state.playing and proc is not None:
     st.session_state.pop("result", None)
     if recal_btn:
         proc.request_recalibrate()
+        st.toast("Recalibrating. Look straight for 5 seconds.", icon="🎯")
     if false_btn:
         proc.request_false_alarm()
+        st.toast("Thanks. Sensitivity lowered a little for you.", icon="👍")
 
     last = st.session_state.setdefault("last_alert", {"beep": 0.0, 1: 0.0, 2: 0.0, 3: 0.0})
     for _k in ("nod", 4):
@@ -1421,6 +1601,9 @@ if ctx.state.playing and proc is not None:
         st.session_state["seen_proc"] = id(proc)
         st.session_state["seen_nods"] = 0
         st.session_state["stop_sent"] = False
+        st.session_state["hist"] = []
+        st.session_state["was_calibrating"] = True
+    hist = st.session_state.setdefault("hist", [])
     n_alert = st.session_state.get("n_alert", 0)
 
     while True:
@@ -1457,7 +1640,23 @@ if ctx.state.playing and proc is not None:
         else:
             status_card(banner, "ok", "✅ Normal. You are alert.")
 
-        render_dashboard(gauge_ph, stats_ph, snap)
+        # advice card only while severe; calibration-finished toast once
+        if snap["face"] and not snap["calibrating"] and lvl == 2:
+            advice_ph.markdown(SEVERE_ADVICE, unsafe_allow_html=True)
+        else:
+            advice_ph.empty()
+        if st.session_state.get("was_calibrating") and snap["face"] and not snap["calibrating"]:
+            st.session_state["was_calibrating"] = False
+            st.toast("Calibration complete. Monitoring is active.", icon="✅")
+        elif snap["calibrating"]:
+            st.session_state["was_calibrating"] = True
+
+        if snap["face"] and not snap["calibrating"]:
+            hist.append(float(snap["score"]))
+            if len(hist) > HIST_MAX:
+                del hist[0]
+
+        render_dashboard(gauge_ph, stats_ph, snap, hist)
 
         # sound + voice in the browser (with the same cooldowns as the desktop script)
         t = time.time()
@@ -1493,29 +1692,59 @@ elif not ctx.state.playing and st.session_state.get("proc") is not None:
     # the stream was stopped: save everything and show the session report
     old = st.session_state.pop("proc")
     st.session_state["result"] = old.finalize()
+    st.rerun()
 
+
+# =====================================================================
+# Session summary
+# =====================================================================
 res = st.session_state.get("result")
 if res and not ctx.state.playing:
+    banner.empty()
     if res.get("auto_off"):
         st.warning(f"The camera was turned off automatically because no face was seen for "
                    f"{res.get('auto_off_sec', 60)} seconds. Press START to begin again.")
-    st.subheader(f"Session summary for {res['user']}")
+
+    avg = float(res["avg"])
+    if avg < MILD_TH:
+        cls, emoji, title, sub = "good", "🌟", "Great session", "You stayed alert. Keep taking regular breaks."
+    elif avg < SEVERE_TH:
+        cls, emoji, title, sub = "mid", "⚠️", "Some fatigue showed up", "Plan a short break soon, especially on long drives."
+    else:
+        cls, emoji, title, sub = "high", "🚨", "High fatigue detected", "Please rest before your next drive."
+    st.markdown(
+        f'<div class="sum-head {cls}"><div class="big">{emoji}</div>'
+        f'<div><h3>{title} · {res["user"]}</h3><p>{sub}</p></div></div>',
+        unsafe_allow_html=True)
+
     a, b, c, d = st.columns(4)
-    a.metric("Avg fatigue", f"{res['avg']:.0f}")
+    a.metric("Avg fatigue", f"{avg:.0f}")
     b.metric("Max fatigue", f"{res['max']:.0f}")
     c.metric("Yawns / nods", f"{res['yawns']} / {res['nods']}")
     d.metric("Severe alerts", res["alerts"])
+
     if res["peak"]:
-        st.info(f"Your most fatigue-prone hour so far: {res['peak'][0]}:00-"
+        st.info(f"🕒 Your most fatigue-prone hour so far: {res['peak'][0]}:00-"
                 f"{res['peak'][0] + 1}:00 (average {res['peak'][1]:.0f}).")
-    if res["report"] and os.path.exists(res["report"]):
-        st.image(res["report"])
-        with open(res["report"], "rb") as f:
-            st.download_button("Download report (PNG)", f, file_name=os.path.basename(res["report"]),
-                               mime="image/png")
-    else:
-        st.caption("Run for at least a few seconds after calibration to get a report graph.")
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "rb") as f:
-            st.download_button("Download event log (CSV)", f, file_name="session_log.csv",
-                               mime="text/csv")
+
+    tab_report, tab_export = st.tabs(["📈 Session report", "⬇️ Downloads"])
+    with tab_report:
+        if res["report"] and os.path.exists(res["report"]):
+            st.image(res["report"], use_container_width=True)
+        else:
+            st.caption("Run for at least a few seconds after calibration to get a report graph.")
+    with tab_export:
+        d1, d2 = st.columns(2)
+        if res["report"] and os.path.exists(res["report"]):
+            with open(res["report"], "rb") as f:
+                d1.download_button("Download report (PNG)", f, file_name=os.path.basename(res["report"]),
+                                   mime="image/png", use_container_width=True)
+        else:
+            d1.caption("No report image for this session.")
+        if os.path.exists(LOG_FILE):
+            with open(LOG_FILE, "rb") as f:
+                d2.download_button("Download event log (CSV)", f, file_name="session_log.csv",
+                                   mime="text/csv", use_container_width=True)
+        else:
+            d2.caption("No event log yet.")
+    st.caption("Press START above to run another session.")
